@@ -2,6 +2,7 @@ import { Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
+import { AuthModule } from './auth/auth.module';
 import { ManagersModule } from './managers/managers.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
@@ -13,6 +14,7 @@ import { AppService } from './app.service';
       useFactory: (configService: ConfigService) => typeOrmConfig(configService),
       inject: [ConfigService],
     }),
+    AuthModule,
     ManagersModule,
   ],
   controllers: [AppController],
