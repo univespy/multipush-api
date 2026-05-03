@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 import { ManagersModule } from './managers/managers.module';
+import { CollaboratorsModule } from './collaborators/collaborators.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -16,6 +17,7 @@ import { AppService } from './app.service';
     }),
     AuthModule,
     ManagersModule,
+    CollaboratorsModule,
   ],
   controllers: [AppController],
   providers: [AppService],
