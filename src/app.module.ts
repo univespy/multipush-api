@@ -6,6 +6,7 @@ import { AuthModule } from './auth/auth.module';
 import { ManagersModule } from './managers/managers.module';
 import { CollaboratorsModule } from './collaborators/collaborators.module';
 import { NotificationsModule } from './notifications/notifications.module';
+import { SchedulesModule } from './schedules/schedules.module';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 
@@ -20,6 +21,7 @@ import { AppService } from './app.service';
     ManagersModule,
     CollaboratorsModule,
     NotificationsModule,
+    SchedulesModule,
   ],
   controllers: [AppController],
   providers: [AppService],
