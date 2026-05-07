@@ -23,7 +23,7 @@ export class Collaborator {
   @Column({ default: true })
   active: boolean;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   teamId: string | null;
 
   @ManyToOne(() => Team, { nullable: true, onDelete: 'SET NULL' })

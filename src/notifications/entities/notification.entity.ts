@@ -18,10 +18,10 @@ export class Notification {
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   scheduleId: string | null;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   collaboratorId: string | null;
 
   @Column('text')
@@ -37,7 +37,7 @@ export class Notification {
   })
   status: NotificationStatus;
 
-  @Column({ nullable: true })
+  @Column({ type: 'varchar', nullable: true })
   twilioSid: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })
