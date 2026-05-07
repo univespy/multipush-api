@@ -344,32 +344,23 @@
             setScales(updated);
             saveScales(updated);
 
-            // Trigger SMS via backend for each collaborator in the selected team
+            // Trigger SMS via backend for the entire team in one request
             const selectedTeam = teams.find((t) => t.name === formData.team);
             if (selectedTeam) {
-              const teamUsers = users.filter(
-                (u) => String(u.teamId) === String(selectedTeam.id)
-              );
-              const formattedDate = formData.startDate
-                ? new Date(formData.startDate + "T00:00:00").toLocaleDateString('pt-BR')
-                : '';
-
-              for (const u of teamUsers) {
-                try {
-                  await apiFetch('/schedules', {
-                    method: 'POST',
-                    body: JSON.stringify({
-                      collaboratorId: u.id,
-                      date: formData.startDate,
-                      startTime: "08:00",
-                      endTime: "17:00",
-                      location: formData.location,
-                      notes: `Cliente: ${formData.client}. Atividade: ${formData.activity}. Veículo: ${formData.vehicle}. Equipamentos: ${formData.equipment}. Previsão: ${formData.endDate || '—'}.`,
-                    }),
-                  });
-                } catch (err) {
-                  console.error(`Falha ao disparar SMS para ${u.name}:`, err);
-                }
+              try {
+                await apiFetch('/schedules/team', {
+                  method: 'POST',
+                  body: JSON.stringify({
+                    teamId: selectedTeam.id,
+                    date: formData.startDate,
+                    startTime: "08:00",
+                    endTime: "17:00",
+                    location: formData.location,
+                    notes: `Cliente: ${formData.client}. Atividade: ${formData.activity}. Veículo: ${formData.vehicle}. Equipamentos: ${formData.equipment}. Previsão: ${formData.endDate || '—'}.`,
+                  }),
+                });
+              } catch (err) {
+                console.error('Falha ao disparar SMS para a equipe:', err);
               }
             }
 

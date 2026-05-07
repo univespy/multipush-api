@@ -81,7 +81,7 @@ describe('SchedulesService', () => {
         },
         {
           provide: CollaboratorsService,
-          useValue: { findOne: jest.fn() },
+          useValue: { findOne: jest.fn(), findByTeamId: jest.fn() },
         },
       ],
     }).compile();
@@ -91,6 +91,44 @@ describe('SchedulesService', () => {
     twilioService = module.get(TwilioService);
     notificationsService = module.get(NotificationsService);
     collaboratorsService = module.get(CollaboratorsService);
+  });
+
+  describe('createForTeam', () => {
+    it('should create one schedule per team member and send SMS to each', async () => {
+      collaboratorsService.findByTeamId.mockResolvedValue([mockCollaborator]);
+      collaboratorsService.findOne.mockResolvedValue(mockCollaborator);
+      repo.create.mockReturnValue(mockSchedule);
+      repo.save.mockResolvedValue(mockSchedule);
+      notificationsService.createPending.mockResolvedValue(mockNotification);
+      twilioService.sendSms.mockResolvedValue({ sid: 'SM789' });
+
+      const result = await service.createForTeam({
+        teamId: 'uuid-t1',
+        date: '2026-05-10',
+        startTime: '08:00',
+        endTime: '17:00',
+        location: 'Av. Paulista, 1000',
+      });
+
+      expect(result).toHaveLength(1);
+      expect(result[0]).toEqual(mockSchedule);
+      expect(twilioService.sendSms).toHaveBeenCalledTimes(1);
+    });
+
+    it('should return an empty array when team has no active members', async () => {
+      collaboratorsService.findByTeamId.mockResolvedValue([]);
+
+      const result = await service.createForTeam({
+        teamId: 'uuid-t1',
+        date: '2026-05-10',
+        startTime: '08:00',
+        endTime: '17:00',
+        location: 'Av. Paulista, 1000',
+      });
+
+      expect(result).toEqual([]);
+      expect(twilioService.sendSms).not.toHaveBeenCalled();
+    });
   });
 
   describe('create', () => {

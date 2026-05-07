@@ -16,6 +16,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { SchedulesService } from './schedules.service';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
+import { CreateTeamScheduleDto } from './dto/create-team-schedule.dto';
 
 @ApiTags('schedules')
 @ApiBearerAuth()
@@ -29,6 +30,13 @@ export class SchedulesController {
   @Post()
   create(@Body() dto: CreateScheduleDto) {
     return this.schedulesService.create(dto);
+  }
+
+  @ApiOperation({ summary: 'Criar agendamentos para toda a equipe e disparar SMS a cada membro' })
+  @ApiResponse({ status: 201, description: 'Agendamentos criados para a equipe' })
+  @Post('team')
+  createForTeam(@Body() dto: CreateTeamScheduleDto) {
+    return this.schedulesService.createForTeam(dto);
   }
 
   @ApiOperation({ summary: 'Listar todos os agendamentos' })

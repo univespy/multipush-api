@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Schedule } from './entities/schedule.entity';
 import { CreateScheduleDto } from './dto/create-schedule.dto';
 import { UpdateScheduleDto } from './dto/update-schedule.dto';
+import { CreateTeamScheduleDto } from './dto/create-team-schedule.dto';
 import { TwilioService } from '../twilio/twilio.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { CollaboratorsService } from '../collaborators/collaborators.service';
@@ -19,6 +20,23 @@ export class SchedulesService {
     private readonly notificationsService: NotificationsService,
     private readonly collaboratorsService: CollaboratorsService,
   ) {}
+
+  async createForTeam(dto: CreateTeamScheduleDto): Promise<Schedule[]> {
+    const collaborators = await this.collaboratorsService.findByTeamId(dto.teamId);
+    const results: Schedule[] = [];
+    for (const c of collaborators) {
+      const schedule = await this.create({
+        collaboratorId: c.id,
+        date: dto.date,
+        startTime: dto.startTime,
+        endTime: dto.endTime,
+        location: dto.location,
+        notes: dto.notes,
+      });
+      results.push(schedule);
+    }
+    return results;
+  }
 
   async create(dto: CreateScheduleDto): Promise<Schedule> {
     const schedule = this.schedulesRepository.create(dto);

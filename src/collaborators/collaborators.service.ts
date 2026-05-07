@@ -21,6 +21,10 @@ export class CollaboratorsService {
     return this.collaboratorsRepository.find({ where: { active: true } });
   }
 
+  findByTeamId(teamId: string): Promise<Collaborator[]> {
+    return this.collaboratorsRepository.find({ where: { active: true, teamId } });
+  }
+
   async findOne(id: string): Promise<Collaborator> {
     const collaborator = await this.collaboratorsRepository.findOne({
       where: { id, active: true },
