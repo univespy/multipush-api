@@ -96,12 +96,8 @@
       return '+55' + digits;
     };
 
-    // ─── localStorage helpers (teams, team assignments, scales/Kanban) ────────
+    // ─── localStorage helpers (scales/Kanban only — teams are now in the API) ──
     const genId = () => Date.now().toString(36) + Math.random().toString(36).slice(2);
-    const loadTeams      = ()  => JSON.parse(localStorage.getItem('mp_teams')       || '[]');
-    const saveTeams      = (v) => localStorage.setItem('mp_teams',       JSON.stringify(v));
-    const loadAssignments = () => JSON.parse(localStorage.getItem('mp_assignments') || '{}');
-    const saveAssignments = (v) => localStorage.setItem('mp_assignments', JSON.stringify(v));
     const loadScales     = ()  => JSON.parse(localStorage.getItem('mp_scales')      || '[]');
     const saveScales     = (v) => localStorage.setItem('mp_scales',      JSON.stringify(v));
 
@@ -270,16 +266,15 @@
         if (!user) return;
         apiFetch('/collaborators')
           .then((data) => {
-            const assignments = loadAssignments();
-            setUsers(data.map((c) => ({ ...c, teamId: assignments[c.id] || '' })));
+            setUsers(data.map((c) => ({ ...c, teamId: c.teamId || '' })));
           })
           .catch(console.error);
       }, [user]);
 
-      // Load teams and scales from localStorage whenever user is authenticated
+      // Load teams from API and scales from localStorage whenever user is authenticated
       useEffect(() => {
         if (!user) return;
-        setTeams(loadTeams());
+        apiFetch('/teams').then(setTeams).catch(console.error);
         setScales(loadScales().sort((a, b) => b.createdAt - a.createdAt));
       }, [user]);
 
@@ -425,25 +420,30 @@
         }
       };
 
-      // ── Teams (localStorage) ───────────────────────────────────────────────
-      const handleTeamSubmit = (e) => {
+      // ── Teams (API) ────────────────────────────────────────────────────────
+      const handleTeamSubmit = async (e) => {
         e.preventDefault();
-        if (editingTeamId) {
-          const updated = teams.map((t) =>
-            t.id === editingTeamId ? { ...t, name: teamFormData.name } : t
-          );
-          setTeams(updated);
-          saveTeams(updated);
-          setEditingTeamId(null);
-          setToast("Equipe atualizada com sucesso!");
-        } else {
-          const newTeam = { id: genId(), name: teamFormData.name };
-          const updated = [...teams, newTeam];
-          setTeams(updated);
-          saveTeams(updated);
-          setToast("Equipe cadastrada com sucesso!");
+        try {
+          if (editingTeamId) {
+            const updated = await apiFetch(`/teams/${editingTeamId}`, {
+              method: 'PATCH',
+              body: JSON.stringify({ name: teamFormData.name }),
+            });
+            setTeams((prev) => prev.map((t) => (t.id === editingTeamId ? updated : t)));
+            setEditingTeamId(null);
+            setToast("Equipe atualizada com sucesso!");
+          } else {
+            const newTeam = await apiFetch('/teams', {
+              method: 'POST',
+              body: JSON.stringify({ name: teamFormData.name }),
+            });
+            setTeams((prev) => [...prev, newTeam]);
+            setToast("Equipe cadastrada com sucesso!");
+          }
+          setTeamFormData({ name: "" });
+        } catch (error) {
+          setToast(`Erro: ${error.message}`);
         }
-        setTeamFormData({ name: "" });
         setTimeout(() => setToast(null), 3000);
       };
 
@@ -452,25 +452,23 @@
         setTeamFormData({ name: team.name });
       };
 
-      const handleDeleteTeam = (id) => {
+      const handleDeleteTeam = async (id) => {
         if (confirm("Deseja realmente excluir esta equipe?")) {
-          const updated = teams.filter((t) => t.id !== id);
-          setTeams(updated);
-          saveTeams(updated);
-          if (editingTeamId === id) {
-            setEditingTeamId(null);
-            setTeamFormData({ name: "" });
+          try {
+            await apiFetch(`/teams/${id}`, { method: 'DELETE' });
+            setTeams((prev) => prev.filter((t) => t.id !== id));
+            if (editingTeamId === id) {
+              setEditingTeamId(null);
+              setTeamFormData({ name: "" });
+            }
+            // Backend SET NULL handles the DB; update local state to reflect the change
+            setUsers((prev) =>
+              prev.map((u) => (u.teamId === id ? { ...u, teamId: '' } : u))
+            );
+            setToast("Equipe excluída com sucesso!");
+          } catch (error) {
+            setToast(`Erro: ${error.message}`);
           }
-          // Remove collaborator assignments for this team
-          const assignments = loadAssignments();
-          Object.keys(assignments).forEach((k) => {
-            if (assignments[k] === id) delete assignments[k];
-          });
-          saveAssignments(assignments);
-          setUsers((prev) =>
-            prev.map((u) => (u.teamId === id ? { ...u, teamId: '' } : u))
-          );
-          setToast("Equipe excluída com sucesso!");
           setTimeout(() => setToast(null), 3000);
         }
       };
@@ -480,22 +478,16 @@
         e.preventDefault();
         try {
           const e164 = toE164(userFormData.phone);
+          const teamId = userFormData.teamId || null;
           if (editingUserId) {
-            await apiFetch(`/collaborators/${editingUserId}`, {
+            const updated = await apiFetch(`/collaborators/${editingUserId}`, {
               method: 'PATCH',
-              body: JSON.stringify({ name: userFormData.name, phone: e164 }),
+              body: JSON.stringify({ name: userFormData.name, phone: e164, teamId }),
             });
-            const assignments = loadAssignments();
-            if (userFormData.teamId) {
-              assignments[editingUserId] = userFormData.teamId;
-            } else {
-              delete assignments[editingUserId];
-            }
-            saveAssignments(assignments);
             setUsers((prev) =>
               prev.map((u) =>
                 u.id === editingUserId
-                  ? { ...u, name: userFormData.name, phone: e164, teamId: userFormData.teamId }
+                  ? { ...updated, teamId: updated.teamId || '' }
                   : u
               )
             );
@@ -504,15 +496,9 @@
           } else {
             const created = await apiFetch('/collaborators', {
               method: 'POST',
-              body: JSON.stringify({ name: userFormData.name, phone: e164 }),
+              body: JSON.stringify({ name: userFormData.name, phone: e164, teamId }),
             });
-            const assignments = loadAssignments();
-            if (userFormData.teamId) assignments[created.id] = userFormData.teamId;
-            saveAssignments(assignments);
-            setUsers((prev) => [
-              ...prev,
-              { ...created, teamId: userFormData.teamId },
-            ]);
+            setUsers((prev) => [...prev, { ...created, teamId: created.teamId || '' }]);
             setToast("Usuário cadastrado com sucesso!");
           }
           setUserFormData({ name: "", teamId: "", phone: "" });

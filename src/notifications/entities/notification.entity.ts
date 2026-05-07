@@ -19,10 +19,10 @@ export class Notification {
   id: string;
 
   @Column({ nullable: true })
-  scheduleId: string;
+  scheduleId: string | null;
 
   @Column({ nullable: true })
-  collaboratorId: string;
+  collaboratorId: string | null;
 
   @Column('text')
   message: string;
@@ -38,10 +38,10 @@ export class Notification {
   status: NotificationStatus;
 
   @Column({ nullable: true })
-  twilioSid: string;
+  twilioSid: string | null;
 
   @Column({ type: 'timestamptz', nullable: true })
-  sentAt: Date;
+  sentAt: Date | null;
 
   @CreateDateColumn()
   createdAt: Date;

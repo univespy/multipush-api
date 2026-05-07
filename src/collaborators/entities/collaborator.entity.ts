@@ -2,9 +2,12 @@ import {
   Entity,
   PrimaryGeneratedColumn,
   Column,
+  ManyToOne,
+  JoinColumn,
   CreateDateColumn,
   UpdateDateColumn,
 } from 'typeorm';
+import { Team } from '../../teams/entities/team.entity';
 
 @Entity('collaborators')
 export class Collaborator {
@@ -19,6 +22,13 @@ export class Collaborator {
 
   @Column({ default: true })
   active: boolean;
+
+  @Column({ nullable: true })
+  teamId: string | null;
+
+  @ManyToOne(() => Team, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'teamId' })
+  team: Team | null;
 
   @CreateDateColumn()
   createdAt: Date;

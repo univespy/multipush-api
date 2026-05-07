@@ -15,6 +15,8 @@ const mockCollaborator: Collaborator = {
   name: 'Carlos Pereira',
   phone: '+5511999999999',
   active: true,
+  teamId: null,
+  team: null,
   createdAt: new Date(),
   updatedAt: new Date(),
 };

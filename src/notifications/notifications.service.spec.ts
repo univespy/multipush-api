@@ -58,7 +58,7 @@ describe('NotificationsService', () => {
 
   describe('markSent', () => {
     it('should update status to SENT with twilioSid and sentAt', async () => {
-      repo.update.mockResolvedValue(undefined);
+      repo.update.mockResolvedValue(undefined as any);
 
       await service.markSent('uuid-n1', 'SM123');
 
@@ -71,7 +71,7 @@ describe('NotificationsService', () => {
 
   describe('markFailed', () => {
     it('should update status to FAILED', async () => {
-      repo.update.mockResolvedValue(undefined);
+      repo.update.mockResolvedValue(undefined as any);
 
       await service.markFailed('uuid-n1');
 

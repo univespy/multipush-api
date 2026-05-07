@@ -4,6 +4,7 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { typeOrmConfig } from './config/typeorm.config';
 import { AuthModule } from './auth/auth.module';
 import { ManagersModule } from './managers/managers.module';
+import { TeamsModule } from './teams/teams.module';
 import { CollaboratorsModule } from './collaborators/collaborators.module';
 import { NotificationsModule } from './notifications/notifications.module';
 import { SchedulesModule } from './schedules/schedules.module';
@@ -18,6 +19,7 @@ import { AppController } from './app.controller';
     }),
     AuthModule,
     ManagersModule,
+    TeamsModule,
     CollaboratorsModule,
     NotificationsModule,
     SchedulesModule,
